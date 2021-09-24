@@ -23,30 +23,43 @@ def generator_search(tag,  geocode):
 
     try:
         # search for the tag
-        ll = driver.find_element_by_tag_name(tag)
+        locate = driver.find_element_by_tag_name(tag)
         # return the information
-        yield print('{}; {}'.format(tag, ll.text))
+        yield locate.text
 
     except(NoSuchElementException):
         yield print('Tag not found: {i}'.format(tag))
 
 
 def find_tags(address):
-    """ Takes the address and passes it to the <generator_search()>"""
+    """ Takes the address and passes it to the <generator_search()>.
+        After that, it takes the text to a dictionary with format:
+        {tag: information} """
+
     tags = ['Point', 'Address']
+    dictionary = {}
     for i in tags:
         x = generator_search(i, address)
-        next(x)
+        dictionary.update({i: next(x)})
+
+    return dictionary
 
 
-x = find_tags(test)
-print(x)
+""" using the <find_tags[]> i can access the data insed of it"""
+
+# x = find_tags(test)
+# print(x['Point'])
 
 
 def calc_distance(local2):
     """ calc distance in km, de default local1 will be mkad """
-    result = distance.distance(MKAD, local2)
+    take_point = find_tags(local2)
+    result = distance.distance(MKAD, take_point['Point'])
     return result
+
+
+x = calc_distance(test)
+print(x)
 
 
 def is_inside_mkad():
