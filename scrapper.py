@@ -17,79 +17,52 @@ options.add_argument('--disable-dev-shm-usage')
 driver = webdriver.Firefox(options=options)
 
 API_KEY = "dba4558d-b961-4e34-bd1f-6b8837626a8d"
-MKAD = (55.751244, 37.618423)  # static point to be calculated
 
+MKAD = (55.751244, 37.618423)  # static point to be calculated
 test = (37.842762, 55.774558)  # any other place to take as parameter
 
 
-def generator_search(address):
+def search(address):
     """ Searchs for a place by cordenates or address,
         takes a tag the information inside a the information inside of it,. """
 
     url = "https://geocode-maps.yandex.ru/1.x/?apikey={}&geocode={}&lang=en-US".format(
         API_KEY, address)
     driver.get(url)
+
     tags = ['Point', 'Address']
     dictionary = {}
 
-    try:
-        for tag in tags:
+    for tag in tags:
+        try:
             tag_text = driver.find_element_by_tag_name(
                 tag)  # search for the tag
 
             dictionary.update({tag: tag_text.text})
 
-            time.sleep(1)
+        except NoSuchElementException:
+            dictionary.update({tag: 'Not Found'})
 
-    except NoSuchElementException:
-        dictionary.update({tag: 'Not Found'})
-
-    finally:
-        driver.close()
-        return dictionary
-
-
-x = generator_search(test)
-print(x)
-
-
-def find_tags(address):
-    """ Takes the address and passes it to the <generator_search()>.
-        After that, it takes the text to a dictionary with format:
-        {tag: information} """
-
-    tags = ['Point', 'Address']
-    dictionary = {}
-    try:
-        for i in tags:
-            x = generator_search(address)
-            dictionary.update({i: x})
-            time.sleep(2)
-
-    except ValueError:
-        return 'Sorry, looks like there is no results'
     return dictionary
 
 
-def calc_distance(local2):
-    """ Calc the distance in km, de default local1 will be mkad, 
+def calc_distance(address):
+    """ Calc the distance in km, de default local1 will be mkad,
         if the place is inside the mkad it doesent make the calc """
 
     words = ['mkad', 'MKAD']
-    take_point = find_tags(local2)
+    _search = search(address)
 
-    try:
-        for word in words:
-            if word in take_point['Address']:
-                return f"Yor address is inside MKAD,there's no need to calculate the distance."
-            else:
-                return distance.distance(MKAD, take_point['Point'])
-    except ValueError:
-        return 'Sorry, looks like there is no results'
+    for word in words:
+        if word in _search['Address']:
+            return "Your address is inside MKAD,there's no need to calculate the distance."
+        else:
+            return distance.distance(MKAD, _search['Point'])
+    driver.close()
 
 
-"""
-a = find_tags('Moskow')
-c = calc_distance(a)
-print(next(c))
-"""
+# just_search = search("MKAD")
+# print(just_search)
+
+# distan = calc_distance("MKAD")
+# print(distan)
