@@ -1,68 +1,80 @@
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-from selenium.common.exceptions import NoSuchElementException
+from bs4 import BeautifulSoup
 from geopy import distance
-import time
+import os
+import logging
+
+logging.basicConfig(filename='scrapper.log', level=logging.INFO)
 
 options = Options()
 options.add_argument('--headless')
-options.add_argument('disable-infobars')
-options.add_argument('disable-extentions')
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-application-cache')
-options.add_argument('--disable-gpu')
-options.add_argument('--disable-dev-shm-usage')
-
-
 driver = webdriver.Firefox(options=options)
 
-API_KEY = "dba4558d-b961-4e34-bd1f-6b8837626a8d"
+API_KEY = os.environ['API_KEY']  # Set your own api key in the env file
 
-MKAD = (55.751244, 37.618423)  # static point to be calculated
-test = (37.842762, 55.774558)  # any other place to take as parameter
+test = (37.618423, 55.751244)  # Static point to be calculated (longlat)
+MKAD = (37.842762, 55.774558)  # any other place to take as parameter (longlat)
 
 
-def search(address):
-    """ Searchs for a place by cordenates or address,
-        takes a tag the information inside a the information inside of it,. """
+def search_soup(address):
+    """ Searchs for a place by coordenates or address,
+        takes the tag inside the tag.
 
-    url = "https://geocode-maps.yandex.ru/1.x/?apikey={}&geocode={}&lang=en-US".format(
+        Attention! The given document has coordenates in long/lat format,
+        so it searchs in this format. To change the format,
+        simply change the <'sco'>variable in the link to <'latlong'>. """
+
+    url = "https://geocode-maps.yandex.ru/1.x/?apikey={}&geocode={}&results=1&sco=longlat&lang=en-US".format(
         API_KEY, address)
-    driver.get(url)
 
+    # parses the html
+    driver.get(url)
+    page = BeautifulSoup(driver.page_source, 'html.parser')
     tags = ['Point', 'Address']
     dictionary = {}
 
+    # take infomation inside a tag
     for tag in tags:
         try:
-            tag_text = driver.find_element_by_tag_name(
-                tag)  # search for the tag
+            find_tag = page.select_one(tag).text
+            dictionary.update({tag: find_tag})
 
-            dictionary.update({tag: tag_text.text})
+        except AttributeError:
+            dictionary.update({tag: 'Not found'})
 
-        except NoSuchElementException:
-            dictionary.update({tag: 'Not Found'})
-
+    logging.info('Result: {}'.format(dictionary))
     return dictionary
 
 
 def calc_distance(address):
     """ Calc the distance in km, de default local1 will be mkad,
-        if the place is inside the mkad it doesent make the calc """
+        if the place is inside the mkad it doesn't make the calc """
 
     words = ['mkad', 'MKAD']
-    _search = search(address)
+    soup = search_soup(address)
 
-    for word in words:
-        if word in _search['Address']:
-            return "Your address is inside MKAD,there's no need to calculate the distance."
+    try:
+        for word in words:
+            if word in soup['Address']:
+                driver.close()
+                logging.info('Result: Address inside MKAD')
+                return "Your address is inside MKAD, there's no need to calculate the distance."
         else:
-            return distance.distance(MKAD, _search['Point'])
-    driver.close()
+            point = soup['Point']
+            distance_km = distance.distance(MKAD, point)
+            driver.close()
+            logging.info('Result of {}:{}'.format(address, distance_km))
+            return distance_km
+
+    except ValueError:
+        driver.close()
+        logging.info('Value error for: {}'.format(address))
+        return 'Sorry, something went wrong'
 
 
-# just_search = search("MKAD")
-# print(just_search)
+# x = search_soup(MKAD)
+# print(x)
 
-# distan = calc_distance("MKAD")
-# print(distan)
+# y = calc_distance(MKAD)
+# print(y)

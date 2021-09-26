@@ -2,7 +2,7 @@ from flask import Flask
 from search_blueprint import search_blueprint
 
 app = Flask(__name__)
-app.register_blueprint(search_blueprint, url_prefix='/blueprint')
+app.register_blueprint(search_blueprint, url_prefix='/')
 
 
 @app.route('/')
