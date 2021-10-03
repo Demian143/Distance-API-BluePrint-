@@ -1,22 +1,22 @@
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 from bs4 import BeautifulSoup
 from geopy import distance
 import os
-
+import requests
 
 API_KEY = os.environ['API_KEY']  # Set your own api key in the env file
 
-test = (37.618423, 55.751244)  # Static point to be calculated (longlat)
-MKAD = (37.842762, 55.774558)  # any other place to take as parameter (longlat)
-
-
-class Search:
+"""
+class Driver:
 
     def __init__(self):
         options = Options()
         options.add_argument('--headless')
         self.driver = webdriver.Firefox(options=options)
+"""
+
+
+class Search:
+    MKAD = (37.842762, 55.774558)  # Static point to be calculated (longlat)
 
     def search_soup(self, address):
         """ Searchs for a place by coordenates or address,
@@ -28,18 +28,18 @@ class Search:
 
         url = "https://geocode-maps.yandex.ru/1.x/?apikey={}&geocode={}&results=1&sco=longlat&lang=en-US".format(
             API_KEY, address)
+
         # parses the html
-        self.driver.get(url)
-        page = BeautifulSoup(self.driver.page_source, 'html.parser')
-        self.driver.quit()
-        tags = ['Point', 'Address']
+        driver = requests.get(url)
+        page = BeautifulSoup(driver.content, 'html.parser')
+
         dictionary = {}
 
         # take infomation inside a tag
-        for tag in tags:
+        for tag in ['Point', 'Address']:
             try:
-                find_tag = page.select_one(tag).text
-                dictionary.update({tag: find_tag})
+                tag_text = page.select_one(tag).text
+                dictionary.update({tag: tag_text})
 
             except AttributeError:
                 dictionary.update({tag: 'Not found'})
@@ -47,7 +47,7 @@ class Search:
         return dictionary
 
     def calc_distance(self, address):
-        """ Calc the distance in km, de default local1 will be mkad,
+        """ Calc the distance from a local in km,default local will be mkad (But you can change it),
             if the place is inside the mkad it doesn't make the calc """
 
         words = ['mkad', 'MKAD']
@@ -67,9 +67,12 @@ class Search:
             return 'Sorry, something went wrong'
 
 
+MKAD = (37.842762, 55.774558)
+test = (37.618423, 55.751244)
+
 search = Search()
 # x = search.search_soup(MKAD)
 # print(x)
 
-# y = search.calc_distance(MKAD)
-# print(y)
+y = search.calc_distance(MKAD)
+print(y)
