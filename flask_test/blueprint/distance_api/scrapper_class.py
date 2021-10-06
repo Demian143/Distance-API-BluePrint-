@@ -1,18 +1,11 @@
+import requests
+import time
+import os
 from bs4 import BeautifulSoup
 from geopy import distance
-import os
-import requests
+
 
 API_KEY = os.environ['API_KEY']  # Set your own api key in the env file
-
-"""
-class Driver:
-
-    def __init__(self):
-        options = Options()
-        options.add_argument('--headless')
-        self.driver = webdriver.Firefox(options=options)
-"""
 
 
 class Search:
@@ -67,12 +60,12 @@ class Search:
             return 'Sorry, something went wrong'
 
 
-MKAD = (37.842762, 55.774558)
-test = (37.618423, 55.751244)
+# MKAD = (37.842762, 55.774558)
+# test = (37.618423, 55.751244)
 
-search = Search()
+# search = Search()
 # x = search.search_soup(MKAD)
 # print(x)
 
-y = search.calc_distance(MKAD)
-print(y)
+# y = search.calc_distance(MKAD)
+# print(y)
