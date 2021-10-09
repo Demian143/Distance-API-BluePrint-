@@ -19,4 +19,4 @@ go to https://yandex.ru/dev/maps/geocoder/doc/desc/concepts/about.html and regis
 
 1) run shell: source example.env
 2) run shell: flask run
-3) web browser: http:/?127.0.0.1:5000/api/v1/distance/<address>
+3) web browser: http://127.0.0.1:5000/api/v1/distance/<address>
